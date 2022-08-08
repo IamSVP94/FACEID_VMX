@@ -3,17 +3,16 @@ import numpy as np
 import pandas as pd
 import requests
 from scipy.spatial.distance import cdist
-from pathlib import Path
 import matplotlib.pyplot as plt
 import random
 import matplotlib as mpl
-import onnxruntime as ort
 from src.constants import PARENT_DIR, bright_etalon, LANDMARKS_COLORS, det_nms, det_thresh
 from src.detector import Detector_cv2
 from src.face_align import estimate_norm
 from src.recognator import Recognator_cv2
 
 # from src.selector import Selector_cv2
+from src.selector import Selector_ort
 
 mpl.rcParams['figure.dpi'] = 200  # plot quality
 mpl.rcParams['figure.subplot.left'] = 0.01
@@ -21,9 +20,8 @@ mpl.rcParams['figure.subplot.right'] = 1
 
 detector = Detector_cv2(PARENT_DIR / 'models/detection/det_1280_1280.onnx', det_thresh=det_thresh, nms_thresh=det_nms)
 recognator = Recognator_cv2(PARENT_DIR / 'models/recognition/IResNet100l.onnx')
+selector = Selector_ort(PARENT_DIR / 'models/selection/ConvNext_selector_softmaxv2.onnx')
 
-
-# selector = Selector_cv2(PARENT_DIR / 'models/selection/ConvNext_selector_softmaxv2.onnx')
 
 class Person:
     def __init__(self, path=None,
@@ -121,12 +119,8 @@ class Person:
         self.etalon_crop = persons[who].crop_face
         self.turn = self._get_turn(limits=limits, bias=turn_bias, show=show)
         if use_nn and self.turn >= 0:
-            selector_out = selector.get(self.crop_face)
-
-            # img_for_selector = preprocess_input(self.crop_face, mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-            # selector_out = frame_selector_model.run(None, {frame_selector_model_input_name: img_for_selector})[0]
-            good_frame = np.argmax(selector_out)  # bad = 0, good = 1
-            if good_frame == 0:  # if "bad"
+            result = selector.get(self.crop_face, show=show)  # 0 - bad, 1 - good
+            if result == 0:  # if "bad"
                 self.turn = -99
         if dists[who] < threshold and self.turn + turn_bias >= 0:
             self.label = persons[who].label

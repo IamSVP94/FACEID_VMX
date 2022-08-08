@@ -1,13 +1,10 @@
-from pathlib import Path
-
 import cv2
-import matplotlib.pyplot as plt
 from tqdm import tqdm
-
-from src.constants import PARENT_DIR, det_thresh, det_nms, det_size, recog_tresh
+from pathlib import Path
+from src.constants import PARENT_DIR, det_thresh, recog_tresh
 from src.utils import persons_list_from_csv, detector, Person
 
-new_output_dir_path = PARENT_DIR / 'temp' / f'recog_tresh={recog_tresh}_det_thresh={det_thresh}_{det_size}'
+new_output_dir_path = PARENT_DIR / 'temp' / f'recog_tresh={recog_tresh}_det_thresh={det_thresh}'
 
 new_output_dir_path.mkdir(exist_ok=True, parents=True)
 print(f'save to {new_output_dir_path}')
@@ -38,7 +35,7 @@ if __name__ == '__main__':
             for face in faces:
                 unknown = Person(full_img=img, face=face, change_brightness=False, show=show)
                 near_dist = unknown.get_label(all_persons, threshold=recog_tresh,
-                                              turn_bias=3, limits=(100, 75), use_nn=False,
+                                              turn_bias=3, limits=(100, 75), use_nn=True,
                                               show=show,
                                               )
                 # face.brightness = unknown.brightness
@@ -52,11 +49,11 @@ if __name__ == '__main__':
                 face.etalon_path = unknown.etalon_path
                 face.etalon_crop = unknown.etalon_crop
 
-            dimg = detector.draw_on(img, faces, plot_roi=True, plot_crop_face=True, plot_etalon=True, show=show)
+            dimg = detector.draw_on(img, faces, plot_roi=True, plot_crop_face=False, plot_etalon=False, show=show)
             new_suffix = f'{[(face.label, face.rec_score) for face in faces]}.jpg'
         else:
             dimg = img
             new_suffix = f"[('empty')].jpg"
 
-        new_path = new_output_dir_path / f'{img_path.stem}_{det_size}_{new_suffix}'
+        new_path = new_output_dir_path / f'{img_path.stem}_{new_suffix}'
         cv2.imwrite(str(new_path), dimg)

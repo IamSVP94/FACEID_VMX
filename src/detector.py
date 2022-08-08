@@ -4,7 +4,7 @@ from cv2 import dnn, cuda
 import onnxruntime as ort
 from matplotlib import pyplot as plt
 
-from src.constants import LANDMARKS_COLORS
+from src.constants import LANDMARKS_COLORS, det_window_size
 
 
 class Face(dict):
@@ -217,8 +217,8 @@ class Detector:
         kpss = kpss[keep, :, :]
         return det, kpss
 
-    def get(self, img, use_roi=None, min_face_size=None):
-        bboxes, kpss = self.detect(img, input_size=(1280, 1280))
+    def get(self, img, use_roi=None, det_window_size=det_window_size, min_face_size=None):
+        bboxes, kpss = self.detect(img, input_size=det_window_size)
         if bboxes.shape[0] == 0:
             return []
         faces = []
