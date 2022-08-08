@@ -8,22 +8,22 @@ import matplotlib.pyplot as plt
 import random
 import matplotlib as mpl
 import onnxruntime as ort
-from src.constants import PARENT_DIR, bright_etalon, LANDMARKS_COLORS
+from src.constants import PARENT_DIR, bright_etalon, LANDMARKS_COLORS, det_nms, det_thresh
 from src.detector import Detector_cv2
 from src.face_align import estimate_norm
 from src.recognator import Recognator_cv2
+
+# from src.selector import Selector_cv2
 
 mpl.rcParams['figure.dpi'] = 200  # plot quality
 mpl.rcParams['figure.subplot.left'] = 0.01
 mpl.rcParams['figure.subplot.right'] = 1
 
-frame_selector_model_path = '/home/vid/hdd/projects/PycharmProjects/insightface/models/ConvNext_selector_softmaxv2.onnx'
-frame_selector_model = ort.InferenceSession(frame_selector_model_path, providers=['CUDAExecutionProvider'])
-frame_selector_model_input_name = frame_selector_model.get_inputs()[0].name
-
-detector = Detector_cv2(PARENT_DIR / 'models/detection/det_1280_1280.onnx')
+detector = Detector_cv2(PARENT_DIR / 'models/detection/det_1280_1280.onnx', det_thresh=det_thresh, nms_thresh=det_nms)
 recognator = Recognator_cv2(PARENT_DIR / 'models/recognition/IResNet100l.onnx')
 
+
+# selector = Selector_cv2(PARENT_DIR / 'models/selection/ConvNext_selector_softmaxv2.onnx')
 
 class Person:
     def __init__(self, path=None,
@@ -31,7 +31,7 @@ class Person:
                  face=None,
                  embedding=None,
                  label='Unknown',
-                 color=(255, 0, 0),
+                 color=(0, 0, 255),
                  change_brightness=False,
                  show=False):
         self.color = color
@@ -121,8 +121,10 @@ class Person:
         self.etalon_crop = persons[who].crop_face
         self.turn = self._get_turn(limits=limits, bias=turn_bias, show=show)
         if use_nn and self.turn >= 0:
-            img_for_selector = preprocess_input(self.crop_face, mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-            selector_out = frame_selector_model.run(None, {frame_selector_model_input_name: img_for_selector})[0]
+            selector_out = selector.get(self.crop_face)
+
+            # img_for_selector = preprocess_input(self.crop_face, mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+            # selector_out = frame_selector_model.run(None, {frame_selector_model_input_name: img_for_selector})[0]
             good_frame = np.argmax(selector_out)  # bad = 0, good = 1
             if good_frame == 0:  # if "bad"
                 self.turn = -99
@@ -151,7 +153,8 @@ def norm_crop(img, landmark, image_size=112, mode='arcface', change_kpss_for_cro
 
 
 def get_random_color():
-    randomcolor = (random.randint(50, 200), random.randint(50, 200), random.randint(0, 150))
+    # randomcolor = (random.randint(50, 200), random.randint(50, 200), random.randint(0, 150))
+    randomcolor = (random.randint(0, 150), random.randint(50, 200), random.randint(50, 200))
     return randomcolor
 
 
@@ -211,27 +214,3 @@ def get_brightness(img):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     h, s, v = cv2.split(hsv)
     return int(np.mean(v))
-
-
-def preprocess_input(img, mean=None, std=None, input_space="RGB", size=(112, 112)):
-    max_pixel_value = 255.0
-    if input_space == "RGB":
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    resizeimg = cv2.resize(img, size)
-
-    img = resizeimg.astype(np.float32)
-    if mean is not None:
-        mean = np.array(mean, dtype=np.float32)
-        mean *= max_pixel_value
-        img -= mean
-
-    if std is not None:
-        std = np.array(std, dtype=np.float32)
-        std *= max_pixel_value
-
-        denominator = np.reciprocal(std, dtype=np.float32)
-        img *= denominator
-
-    img = np.moveaxis(img, -1, 0)
-    img = img[np.newaxis, :, :, :]
-    return img

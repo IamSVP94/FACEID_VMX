@@ -30,18 +30,6 @@ class Face(dict):
     def __getattr__(self, name):
         return None
 
-    # @property
-    # def embedding_norm(self):
-    #     if self.embedding is None:
-    #         return None
-    #     return l2norm(self.embedding)
-    #
-    # @property
-    # def normed_embedding(self):
-    #     if self.embedding is None:
-    #         return None
-    #     return self.embedding / self.embedding_norm
-
 
 class Detector:
     def __init__(self, path, det_thresh=0.7, nms_thresh=0.4, device='cuda'):
@@ -281,7 +269,7 @@ class Detector:
                 cv2.putText(img, title, (text_pos_x, text_pos_y), font, font_scale, color, thickness)
             return img
 
-        dimg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        dimg = img.copy()
         if plot_roi and self.use_roi:
             dimg = cv2.rectangle(img.copy(),
                                  (self.roi_points['y_min'], self.roi_points['x_min']),
@@ -296,7 +284,7 @@ class Detector:
             title = f'"{face.label}", ({round(float(face.det_score), 4)}, {round(float(face.rec_score), 4)}) turn={face.turn}, size={face.size}'
             dimg = _cv2_add_title(dimg, title)
         if plot_crop_face:
-            crops = [cv2.cvtColor(face.crop_face, cv2.COLOR_BGR2RGB) for face in faces]
+            crops = [face.crop_face for face in faces]
             # draw landmarsks on crops
             for crop_idx, crop in enumerate(crops):
                 for idx_p, p in enumerate(faces[crop_idx].kps):
@@ -312,7 +300,7 @@ class Detector:
                 if face.etalon_crop is not None:
                     etalon = face.etalon_crop
                 elif face.etalon_path is not None:
-                    etalon = cv2.cvtColor(cv2.imread(str(face.etalon_path)), cv2.COLOR_BGR2RGB)
+                    etalon = cv2.imread(str(face.etalon_path))
                 else:
                     etalon = np.full(shape=(112, 112, 3), fill_value=face.color, dtype=np.uint8)  # empties
                 etalons.append(etalon)
@@ -320,7 +308,7 @@ class Detector:
             etalons_together = self._get_coll_imgs(etalons, dimg.shape)
             dimg = np.concatenate([dimg, etalons_together], axis=1)
         if show:
-            plt.imshow(dimg)
+            plt.imshow(cv2.cvtColor(dimg, cv2.COLOR_BGR2RGB))
             plt.title(title)
             plt.show()
         return dimg
