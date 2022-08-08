@@ -44,11 +44,11 @@ class Face(dict):
 
 
 class Detector:
-    def __init__(self, path, det_thresh=0.7, device='cuda'):
+    def __init__(self, path, det_thresh=0.7, nms_thresh=0.4, device='cuda'):
         self.path = path
-        self.device = device
         self.det_thresh = det_thresh
-        self.nms_thresh = 0.4
+        self.nms_thresh = nms_thresh
+        self.device = device
         self.output_names = None
         self.use_roi = False
         self.color = (0, 255, 0)
@@ -153,13 +153,11 @@ class Detector:
         return keep
 
     def forward(self, img, threshold, input_size=None):
-        blob = self._get_blob(img, input_size=input_size)
+        blob = self._get_blob(img, input_size=input_size, swapRB=True)
         net_outs = self._run(blob, input_size=input_size)
-
         fmc = 3
         _feat_stride_fpn = [8, 16, 32]
         _num_anchors = 2
-        use_kps = True
 
         input_height = blob.shape[2]
         input_width = blob.shape[3]
@@ -185,11 +183,12 @@ class Detector:
                     anchor_centers[i, :, 1] = i
                 for i in range(width):
                     anchor_centers[:, i, 0] = i
+
+                anchor_centers = (anchor_centers * stride).reshape((-1, 2))
                 if _num_anchors > 1:
                     anchor_centers = np.stack([anchor_centers] * _num_anchors, axis=1).reshape((-1, 2))
                 if len(center_cache) < 100:  # on the image
                     center_cache[key] = anchor_centers
-
             pos_inds = np.where(scores >= threshold)[0]
             bboxes = self._distance2bbox(anchor_centers, bbox_preds)
             pos_scores = scores[pos_inds]
@@ -282,7 +281,7 @@ class Detector:
                 cv2.putText(img, title, (text_pos_x, text_pos_y), font, font_scale, color, thickness)
             return img
 
-        dimg = img.copy()
+        dimg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if plot_roi and self.use_roi:
             dimg = cv2.rectangle(img.copy(),
                                  (self.roi_points['y_min'], self.roi_points['x_min']),
@@ -294,9 +293,10 @@ class Detector:
             face.size = [box[2] - box[0], box[3] - box[1]]
             color = face['color'] if face.get('color') else (0, 255, 0)
             cv2.rectangle(dimg, (box[0], box[1]), (box[2], box[3]), color, 1)
+            title = f'"{face.label}", ({round(float(face.det_score), 4)}, {round(float(face.rec_score), 4)}) turn={face.turn}, size={face.size}'
+            dimg = _cv2_add_title(dimg, title)
         if plot_crop_face:
-            crops = [face.crop_face for face in faces]
-
+            crops = [cv2.cvtColor(face.crop_face, cv2.COLOR_BGR2RGB) for face in faces]
             # draw landmarsks on crops
             for crop_idx, crop in enumerate(crops):
                 for idx_p, p in enumerate(faces[crop_idx].kps):
@@ -321,49 +321,7 @@ class Detector:
             dimg = np.concatenate([dimg, etalons_together], axis=1)
         if show:
             plt.imshow(dimg)
-            plt.show()
-        return dimg
-
-    def draw_on_early(self, img, faces, plot_roi=False, plot_crop_face=False, plot_etalon=False, show=False):
-        dimg = img.copy()
-        if plot_roi and self.use_roi:
-            dimg = cv2.rectangle(img.copy(),
-                                 (self.roi_points['y_min'], self.roi_points['x_min']),
-                                 (self.roi_points['y_max'], self.roi_points['x_max']),
-                                 self.color, self.thickness)
-        for i in range(len(faces)):
-            face = faces[i]
-            box = face.bbox.astype(np.int)  # xmin, ymin, xmax, ymax
-            face.size = [box[2] - box[0], box[3] - box[1]]
-            color = face['color'] if face.get('color') else (0, 255, 0)
-            cv2.rectangle(dimg, (box[0], box[1]), (box[2], box[3]), color, 1)
-        if plot_crop_face:
-            crops = [face.crop_face for face in faces]
-
-            # draw landmarsks on crops
-            for crop_idx, crop in enumerate(crops):
-                for idx_p, p in enumerate(faces[crop_idx].kps):
-                    cv2.circle(crop, p, 1, LANDMARKS_COLORS[idx_p], 1)
-            # /draw landmarsks on crops
-
-            crops_together = self._get_coll_imgs(crops, dimg.shape)
-            dimg = np.concatenate([dimg, crops_together], axis=1)
-
-        if plot_etalon:
-            etalons = []
-            for face in faces:
-                if face.etalon_crop is not None:
-                    etalon = face.etalon_crop
-                elif face.etalon_path is not None:
-                    etalon = cv2.cvtColor(cv2.imread(str(face.etalon_path)), cv2.COLOR_BGR2RGB)
-                else:
-                    etalon = np.full(shape=(112, 112, 3), fill_value=face.color, dtype=np.uint8)  # empties
-                etalons.append(etalon)
-
-            etalons_together = self._get_coll_imgs(etalons, dimg.shape)
-            dimg = np.concatenate([dimg, etalons_together], axis=1)
-        if show:
-            plt.imshow(dimg)
+            plt.title(title)
             plt.show()
         return dimg
 
