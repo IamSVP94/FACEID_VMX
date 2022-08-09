@@ -140,18 +140,15 @@ class Detector:
         return keep
 
     def forward(self, img, threshold, input_size=None):
-        blob = self._get_blob(img, input_size=input_size, swapRB=True)
+        blob = self._get_blob(img, input_size=input_size)
         net_outs = self._run(blob, input_size=input_size)
-        _feat_stride_fpn = [8, 16, 32]
+
+        _feat_stride_fpn = [8, 16, 32]  # for Feature Pyramid Network
         fmc = len(_feat_stride_fpn)
         _num_anchors = 2
 
-        input_height = blob.shape[2]
-        input_width = blob.shape[3]
-        scores_list = []
-        bboxes_list = []
-        kpss_list = []
-
+        _, _, input_height, input_width = blob.shape
+        scores_list, bboxes_list, kpss_list = [], [], []
         for idx, stride in enumerate(_feat_stride_fpn):
             scores = net_outs[idx]
             bbox_preds = net_outs[idx + fmc]

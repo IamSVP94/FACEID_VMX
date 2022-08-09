@@ -29,13 +29,16 @@ if __name__ == '__main__':
         p_bar.set_description(f'{img_path}')
         img = cv2.imread(str(img_path))
         faces = detector.get(img,
-                             use_roi=None,
-                             min_face_size=None)
+                             # use_roi=(45, 0, 20, 20),  # top, bottom, left, right
+                             # min_face_size=(45, 45),
+                             )
         if faces:  # if not empty
             for face in faces:
                 unknown = Person(full_img=img, face=face, change_brightness=False, show=show)
-                near_dist = unknown.get_label(all_persons, threshold=recog_tresh,
-                                              turn_bias=3, limits=(100, 75), use_nn=True,
+                near_dist = unknown.get_label(all_persons,
+                                              threshold=recog_tresh,
+                                              turn_bias=3, limits=(100, 75),
+                                              use_nn=True,
                                               show=show,
                                               )
                 # face.brightness = unknown.brightness
