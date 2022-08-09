@@ -7,9 +7,7 @@ import onnx
 from cv2 import dnn, cuda
 import onnxruntime as ort
 from matplotlib import pyplot as plt
-from onnx import version_converter
 from tqdm import tqdm
-
 
 # 0 - bad, 1 - good
 
@@ -20,7 +18,7 @@ class Selector:
 
     def _run(self, img, input_size=None):
         '''
-        Recognator_ort or Recognator_cv2 method
+        Selector_ort or Selector_cv2 method
         :param img:
         :param input_size:
         :return:
@@ -63,7 +61,6 @@ class Selector_ort(Selector):
         return results
 
 
-'''
 class Selector_cv2(Selector):
     def __init__(self, *args, **kwargs):
         super(Selector_cv2, self).__init__(*args, **kwargs)
@@ -79,14 +76,14 @@ class Selector_cv2(Selector):
         results = self.net.forward(self.output_names)[0]
         return results
 
-path = '/home/vid/hdd/projects/PycharmProjects/FACEID_VMX/models/selection/ConvNext_selector_softmaxv2.onnx'
-selector = Selector_ort(path)
+'''
+# path = '/home/vid/hdd/projects/PycharmProjects/FACEID_VMX/models/selection/ConvNext_selector_softmaxv2.onnx'
+path = '/home/vid/hdd/projects/PycharmProjects/FACEID_VMX/models/selection/convnext_tiny.onnx'
+selector = Selector_cv2(path)
 
 DATASET_DIRS = [
-    '/home/vid/hdd/projects/PycharmProjects/FACEID_VMX/temp',
-    # '/home/vid/Downloads/datasets/office_turns',
-    # '/home/vid/Downloads/datasets/thispersondoesnotexist',
-    # '/home/vid/Downloads/datasets/face_crop_norm_dataset/datasetv2',
+    # '/home/vid/hdd/projects/PycharmProjects/FACEID_VMX/temp',
+    '/home/vid/Downloads/datasets/face_crop_norm_dataset/datasetv2',
 ]
 imgs = []
 for dir in DATASET_DIRS:

@@ -18,8 +18,7 @@ class Face(dict):
 
     def __setattr__(self, name, value):
         if isinstance(value, (list, tuple)):
-            value = [self.__class__(x)
-                     if isinstance(x, dict) else x for x in value]
+            value = [self.__class__(x) if isinstance(x, dict) else x for x in value]
         elif isinstance(value, dict) and not isinstance(value, self.__class__):
             value = self.__class__(value)
         super(Face, self).__setattr__(name, value)
@@ -143,8 +142,8 @@ class Detector:
     def forward(self, img, threshold, input_size=None):
         blob = self._get_blob(img, input_size=input_size, swapRB=True)
         net_outs = self._run(blob, input_size=input_size)
-        fmc = 3
         _feat_stride_fpn = [8, 16, 32]
+        fmc = len(_feat_stride_fpn)
         _num_anchors = 2
 
         input_height = blob.shape[2]
@@ -173,8 +172,8 @@ class Detector:
                     anchor_centers[:, i, 0] = i
 
                 anchor_centers = (anchor_centers * stride).reshape((-1, 2))
-                if _num_anchors > 1:
-                    anchor_centers = np.stack([anchor_centers] * _num_anchors, axis=1).reshape((-1, 2))
+                anchor_centers = np.stack([anchor_centers] * _num_anchors, axis=1).reshape((-1, 2))
+
                 if len(center_cache) < 100:  # on the image
                     center_cache[key] = anchor_centers
             pos_inds = np.where(scores >= threshold)[0]
