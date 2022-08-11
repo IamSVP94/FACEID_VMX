@@ -20,7 +20,7 @@ mpl.rcParams['figure.subplot.right'] = 1
 
 detector = Detector_cv2(PARENT_DIR / 'models/detection/det_1280_1280.onnx', det_thresh=det_thresh, nms_thresh=det_nms)
 recognator = Recognator_cv2(PARENT_DIR / 'models/recognition/IResNet100l.onnx')
-selector = Selector_ort(PARENT_DIR / 'models/selection/ConvNext_selector_softmaxv2.onnx')
+selector = Selector_ort(PARENT_DIR / 'models/selection/ConvNext_selector_softmaxv2.onnx', device='cpu')
 
 
 class Person:
