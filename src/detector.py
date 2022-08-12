@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 from cv2 import dnn, cuda
 import onnxruntime as ort
-from matplotlib import pyplot as plt
 
 from src.constants import LANDMARKS_COLORS, det_window_size
 
@@ -304,9 +303,8 @@ class Detector:
             etalons_together = self._get_coll_imgs(etalons, dimg.shape)
             dimg = np.concatenate([dimg, etalons_together], axis=1)
         if show:
-            plt.imshow(cv2.cvtColor(dimg, cv2.COLOR_BGR2RGB))
-            plt.title(title)
-            plt.show()
+            from src.utils import plt_show_img
+            plt_show_img(dimg, title=title, swapRB=True)
         return dimg
 
     def _get_coll_imgs(self, imgs_list, size, top=1, left=1, right=1):  # top=10, left=5, right=5

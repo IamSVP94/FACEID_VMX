@@ -100,9 +100,7 @@ class Person:
             cv2.circle(src, nose, 1, nose_color, 1)
 
             concat = np.concatenate((cimg, src.astype(int)), axis=1)
-            plt.imshow(concat)
-            plt.title(f'"{nose_inside}" nose_inside face')
-            plt.show()
+            plt_show_img(concat, title=f'"{nose_inside}" nose_inside face')
         return nose_inside
 
     def get_label(self, persons,
@@ -127,9 +125,8 @@ class Person:
             self.color = persons[who].color
             # self.etalon_path = persons[who].path
         if show:
-            plt.imshow(cv2.cvtColor(self.crop_face, cv2.COLOR_BGR2RGB))
-            plt.title(f'"{self.label}": turn={self.turn} score={min_dist} (treshold={threshold})')
-            plt.show()
+            title = f'"{self.label}": turn={self.turn} score={min_dist} (treshold={threshold})'
+            plt_show_img(self.crop_face, swapRB=True, title=title)
         return min_dist
 
 
@@ -174,8 +171,7 @@ def get_imgs_thispersondoesnotexist(n=1, colors='RGB', show=False):
         if show:
             if colors != 'RGB':
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            plt.imshow(img)
-            plt.show()
+            plt_show_img(img)
         imgs.append(img)
     return imgs
 
@@ -197,10 +193,8 @@ def brightness_changer(img, etalon=None, diff=None, show=False):  # etalon=150
         hsv = cv2.merge((h, s, v))
     final_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     if show:
-        vis = np.concatenate((img, final_img), axis=1)
-        plt.imshow(vis)
-        plt.title(f'before {orig_br}:after ~{etalon}')
-        plt.show()
+        together = np.concatenate((img, final_img), axis=1)
+        plt_show_img(together, title=f'before {orig_br}:after ~{etalon}', swapRB=False)
     return final_img
 
 
@@ -208,3 +202,11 @@ def get_brightness(img):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     h, s, v = cv2.split(hsv)
     return int(np.mean(v))
+
+
+def plt_show_img(img, swapRB: bool = False, title: str = None) -> None:
+    img_show = cv2.cvtColor(img, cv2.COLOR_BGR2RGB).copy() if swapRB else img.copy()
+    plt.imshow(img_show)
+    if title:
+        plt.title(title)
+    plt.show()

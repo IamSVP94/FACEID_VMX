@@ -6,10 +6,11 @@ import numpy as np
 import onnx
 from cv2 import dnn, cuda
 import onnxruntime as ort
-from matplotlib import pyplot as plt
 from tqdm import tqdm
 
+
 # 0 - bad, 1 - good
+
 
 class Selector:
     def __init__(self, path, device='cuda'):
@@ -42,9 +43,8 @@ class Selector:
         output = self._run(blob)
         result = np.argmax(output)
         if show:
-            plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-            plt.title(f'result = {result}')
-            plt.show()
+            from src.utils import plt_show_img
+            plt_show_img(img, swapRB=True, title=f'result = {result}')
         return result
 
 
@@ -75,6 +75,7 @@ class Selector_cv2(Selector):
         self.net.setInput(blob)
         results = self.net.forward(self.output_names)[0]
         return results
+
 
 '''
 # path = '/home/vid/hdd/projects/PycharmProjects/FACEID_VMX/models/selection/ConvNext_selector_softmaxv2.onnx'

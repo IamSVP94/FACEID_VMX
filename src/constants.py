@@ -1,6 +1,6 @@
 from pathlib import Path
 
-PARENT_DIR = Path('/home/vid/hdd/projects/PycharmProjects/FACEID_VMX/')
+PARENT_DIR = Path(__file__).parent.parent  # FACEID_VMX dir
 LANDMARKS_COLORS = [(0, 255, 0), (255, 0, 255), (255, 255, 255), (0, 255, 0), (255, 0, 255)]
 
 det_thresh = 0.6  # 0.75

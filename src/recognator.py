@@ -1,8 +1,6 @@
 import cv2
 from cv2 import dnn, cuda
 import onnxruntime as ort
-from matplotlib import pyplot as plt
-
 
 class Recognator:
     def __init__(self, path, device='cuda'):
@@ -34,9 +32,8 @@ class Recognator:
         blob = self._get_blob(img)
         embedding = self._run(blob)
         if show:
-            plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-            plt.title('embedding is ready!')
-            plt.show()
+            from src.utils import plt_show_img
+            plt_show_img(img, swapRB=True, title='embedding is ready!')
         return embedding
 
 
