@@ -113,8 +113,12 @@ class Person:
             dists.append(dist)
         who = np.argmin(dists)
         min_dist = round(dists[who], 5)
+
+        self.etalon_who = who
         self.etalon_path = persons[who].path
         self.etalon_crop = persons[who].crop_face
+        self.etalon_turn = persons[who].turn
+        self.etalon_face = persons[who].face
         self.turn = self._get_turn(limits=limits, bias=turn_bias, show=show)
         if use_nn and self.turn >= 0:
             result = selector.get(self.crop_face, show=show)  # 0 - bad, 1 - good
