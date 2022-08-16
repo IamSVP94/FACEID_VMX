@@ -7,20 +7,22 @@ import matplotlib.pyplot as plt
 import random
 import matplotlib as mpl
 from src.constants import PARENT_DIR, bright_etalon, LANDMARKS_COLORS, det_nms, det_thresh
-from src.detector import Detector_cv2
+from src.detector import Detector_cv2, Detector_ort
 from src.face_align import estimate_norm
-from src.recognator import Recognator_cv2
+from src.recognator import Recognator_cv2, Recognator_ort
 
-# from src.selector import Selector_cv2
-from src.selector import Selector_ort
+from src.selector import Selector_ort, Selector_cv2
 
 mpl.rcParams['figure.dpi'] = 200  # plot quality
 mpl.rcParams['figure.subplot.left'] = 0.01
 mpl.rcParams['figure.subplot.right'] = 1
 
-detector = Detector_cv2(PARENT_DIR / 'models/detection/det_1280_1280.onnx', det_thresh=det_thresh, nms_thresh=det_nms)
-recognator = Recognator_cv2(PARENT_DIR / 'models/recognition/IResNet100l.onnx')
-selector = Selector_ort(PARENT_DIR / 'models/selection/ConvNext_selector_softmaxv2.onnx', device='cpu')
+nn_device = 'cuda'
+detector = Detector_ort(PARENT_DIR / 'models/detection/det_1280_1280.onnx', det_thresh=det_thresh, nms_thresh=det_nms,
+                        device=nn_device)
+recognator = Recognator_ort(PARENT_DIR / 'models/recognition/IResNet100l.onnx', device=nn_device)
+selector = Selector_ort(PARENT_DIR / 'models/selection/ConvNext_selector_softmaxv2_R2_15082022_112x112.onnx',
+                        device=nn_device)
 
 
 class Person:
