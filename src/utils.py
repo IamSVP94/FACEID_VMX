@@ -182,25 +182,34 @@ def get_imgs_thispersondoesnotexist(n=1, colors='RGB', show=False):
     return imgs
 
 
-def brightness_changer(img, etalon=None, diff=None, show=False):  # etalon=150
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    h, s, v = cv2.split(hsv)
-    orig_br = int(np.mean(v))
-    if etalon:
-        value = etalon - orig_br
-        v = cv2.add(v, value)
-        v[v > 255] = 255
-        v[v < 0] = 0
-        hsv = cv2.merge((h, s, v))
-    if diff:
-        v = cv2.add(v, diff)
-        v[v > 255] = 255
-        v[v < 0] = 0
-        hsv = cv2.merge((h, s, v))
-    final_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+def brightness_changer(img, etalon=None, diff=None, mode='lab', show=False):  # hsv etalon=150; lab etalon=120?
+    assert mode in ['hsv', 'lab']
+    assert etalon is not None or diff is not None
+    if mode == 'hsv':
+        cv2_mode = cv2.COLOR_BGR2HSV
+        cv2_mode_invert = cv2.COLOR_HSV2BGR
+    elif mode == 'lab':
+        cv2_mode = cv2.COLOR_BGR2Lab
+        cv2_mode_invert = cv2.COLOR_Lab2BGR
+    params = cv2.split(cv2.cvtColor(img, cv2_mode))
+    if mode == 'hsv':
+        bright_param = params[2]
+        orig_br = int(np.mean(bright_param))
+    elif mode == 'lab':
+        bright_param = params[0]
+        orig_br = int(np.mean(bright_param))
+    if etalon and diff is None:
+        diff = etalon - orig_br
+    bright_param = cv2.add(bright_param, diff)
+    # bright_param = cv2.normalize(bright_param, None, alpha=0, beta=255)
+    if mode == 'hsv':
+        params = cv2.merge((params[0], params[1], bright_param))
+    elif mode == 'lab':
+        params = cv2.merge((bright_param, params[1], params[2]))
+    final_img = cv2.cvtColor(params, cv2_mode_invert)
     if show:
         together = np.concatenate((img, final_img), axis=1)
-        plt_show_img(together, title=f'before {orig_br}:after ~{etalon}', swapRB=False)
+        plt_show_img(together, title=f'before {orig_br}:after ~{etalon}', swapRB=True)
     return final_img
 
 
