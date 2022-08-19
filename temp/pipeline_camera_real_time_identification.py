@@ -7,7 +7,7 @@ from pathlib import Path
 from src.constants import PARENT_DIR, det_thresh, recog_tresh
 from src.utils import persons_list_from_csv, detector, Person
 
-new_output_dir_path = PARENT_DIR / 'temp' / f'cam_office_recog_tresh={recog_tresh}_det_thresh={det_thresh}'
+new_output_dir_path = PARENT_DIR / 'temp' / f'cam_office_SCUD_recog_tresh={recog_tresh}_det_thresh={det_thresh}'
 
 Path(new_output_dir_path, 'ready').mkdir(exist_ok=True, parents=True)
 Path(new_output_dir_path, 'raw').mkdir(exist_ok=True, parents=True)
@@ -20,9 +20,11 @@ CAM_LOGIN = "admin"
 CAM_PASSWORD = "1ICenter"
 cap = cv2.VideoCapture(f"rtsp://{CAM_LOGIN}:{CAM_PASSWORD}@{CAM_IP}")
 # cap.set(cv2.CAP_PROP_FPS, 20)
-
 # ==================== /cam params
 
+cam_fps = cap.get(cv2.CAP_PROP_FPS)
+print(cam_fps)
+new_fps = 4
 all_persons = persons_list_from_csv(PARENT_DIR / 'src/n=10413_native.csv')
 
 show = False  # for easy debugging
@@ -31,7 +33,7 @@ if __name__ == '__main__':
     with tqdm() as pbar:
         while (True):
             ret, img = cap.read()
-            if every_frame_count % 13 == 0:
+            if every_frame_count % int(cam_fps / new_fps) == 0:
                 try:
                     faces = detector.get(
                         img,
@@ -74,6 +76,6 @@ if __name__ == '__main__':
                 cv2.imwrite(str(new_path), dimg)  # save ready frames
                 new_path = new_output_dir_path / 'raw' / f'{every_frame_count}_{datetime.datetime.now()}_{new_suffix}'
                 cv2.imwrite(str(new_path), img)  # save raw frames
-            every_frame_count += 1
-        cap.release()
-        cv2.destroyAllWindows()
+                every_frame_count += 1
+    cap.release()
+    cv2.destroyAllWindows()
