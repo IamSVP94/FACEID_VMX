@@ -194,10 +194,9 @@ def brightness_changer(img, etalon=None, diff=None, mode='lab', show=False):  # 
     params = cv2.split(cv2.cvtColor(img, cv2_mode))
     if mode == 'hsv':
         bright_param = params[2]
-        orig_br = int(np.mean(bright_param))
     elif mode == 'lab':
         bright_param = params[0]
-        orig_br = int(np.mean(bright_param))
+    orig_br = get_brightness(img, mode=mode)
     if etalon and diff is None:
         diff = etalon - orig_br
     bright_param = cv2.add(bright_param, diff)
@@ -209,7 +208,7 @@ def brightness_changer(img, etalon=None, diff=None, mode='lab', show=False):  # 
     final_img = cv2.cvtColor(params, cv2_mode_invert)
     if show:
         together = np.concatenate((img, final_img), axis=1)
-        plt_show_img(together, title=f'before {orig_br}:after ~{etalon}', swapRB=True)
+        plt_show_img(together, title=f'before {orig_br}:after ~{get_brightness(final_img, mode=mode)}', swapRB=True)
     return final_img
 
 
