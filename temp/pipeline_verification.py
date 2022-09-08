@@ -5,15 +5,17 @@ from pathlib import Path
 from src.constants import PARENT_DIR, det_thresh, recog_tresh
 from src.utils import persons_list_from_csv, detector, Person, get_random_color
 
-new_output_dir_path = PARENT_DIR / 'temp' / f'queue_with_etalon_replacement'
+new_output_dir_path = PARENT_DIR / 'temp' / f'SCUD1908' / 'imgs'
+new_etalons_dir_path = PARENT_DIR / 'temp' / f'SCUD1908' / 'etalons'
 
 new_output_dir_path.mkdir(exist_ok=True, parents=True)
+new_etalons_dir_path.mkdir(exist_ok=True, parents=True)
 print(f'save to {new_output_dir_path}')
 
-# all_persons = persons_list_from_csv(PARENT_DIR / 'src/n=10413_native.csv')
+# all_persons = persons_list_from_csv(PARENT_DIR / 'src/n=10413_native.csv')  # 10K people
 emb0 = np.ones(shape=(1, 512))
 img0 = np.ones(shape=(112, 112, 3))
-all_persons = [Person(full_img=img0, label='zero', color=get_random_color(), embedding=emb0)]
+all_persons = [Person(full_img=img0, label='nobody', color=get_random_color(), embedding=emb0)]
 
 
 def _cv2_add_title(img, title, color, filled=True,
@@ -36,13 +38,15 @@ def _cv2_add_title(img, title, color, filled=True,
 show = False  # for easy debugging
 if __name__ == '__main__':
     DATASET_DIRS = [
-        '/home/vid/Downloads/datasets/queue',
+        # '/home/vid/Downloads/datasets/queue',
+        # '/home/vid/hdd/projects/PycharmProjects/FACEID_VMX/temp/SCUD_recog_thr=0.6_det_thr=0.6/2022-08-16/raw',
+        '/home/vid/Downloads/datasets/SCUD/',
         # '/home/vid/hdd/projects/PycharmProjects/FACEID_VMX/temp/video/faceimg',
     ]
     imgs = []
     for dir in DATASET_DIRS:
         for format in ['jpg', 'png', 'jpeg']:
-            imgs.extend(Path(dir).glob(f'**/*.{format}'))
+            imgs.extend(Path(dir).glob(f'**/raw/*.{format}'))
     # random.seed(2)
     # random.shuffle(imgs)
     # imgs = imgs[:200]
@@ -53,8 +57,8 @@ if __name__ == '__main__':
         p_bar.set_description(f'{img_path}')
         img = cv2.imread(str(img_path))
         faces = detector.get(img,
-                             use_roi=(35, 0, 20, 10),  # top, bottom, left, right
-                             min_face_size=(45, 45),
+                             # use_roi=(25, 0, 0, 15),  # top, bottom, left, right
+                             min_face_size=(40, 40),
                              )
         monitor_logs = {'messages': [], 'colors': []}
         if faces:  # if not empty
@@ -74,6 +78,10 @@ if __name__ == '__main__':
                     person_idx += 1
                     unknown.color = get_random_color()
                     all_persons.append(unknown)  # add person for verification
+
+                    new_etalon_path = Path(new_etalons_dir_path, f'{unknown.label}.jpg')
+                    cv2.imwrite(str(new_etalon_path), unknown.crop_face)  # save etalon 112x112 img
+
                     monitor_logs['messages'].append(f'appended "{unknown.label}"!')
                     monitor_logs['colors'].append(unknown.color)
                 # '''  # etalon replacement
@@ -84,6 +92,10 @@ if __name__ == '__main__':
                     if unknown.turn > unknown.etalon_turn and face_size[0] > etalon_size[0] and face_size[0] > \
                             etalon_size[0]:
                         all_persons[unknown.etalon_who] = unknown
+
+                        new_etalon_path = Path(new_etalons_dir_path, f'{unknown.label}.jpg')
+                        cv2.imwrite(str(new_etalon_path), unknown.crop_face)  # save etalon 112x112 img
+
                         monitor_logs['messages'].append(f'change etalon for "{unknown.label}"! ({img_path.stem})')
                         monitor_logs['colors'].append(unknown.color)
                 # '''
@@ -99,7 +111,7 @@ if __name__ == '__main__':
                 face.etalon_path = unknown.etalon_path
                 face.etalon_crop = unknown.etalon_crop
 
-            dimg = detector.draw_on(img, faces, plot_roi=True, plot_crop_face=False, plot_etalon=False, show=show)
+            dimg = detector.draw_on(img, faces, plot_roi=True, plot_crop_face=True, plot_etalon=True, show=show)
             new_suffix = f'{[(face.label, face.rec_score) for face in faces]}.jpg'
 
             start_Ox = 40
@@ -110,6 +122,7 @@ if __name__ == '__main__':
                 messages_idx += 1
                 start_Ox += 20
         else:
+            continue
             dimg = img
             new_suffix = f"[('empty')].jpg"
 

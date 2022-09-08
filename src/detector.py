@@ -250,6 +250,7 @@ class Detector:
         return faces
 
     def draw_on(self, img, faces, plot_roi=False, plot_crop_face=False, plot_etalon=False, show=False):
+        faces = list(sorted(faces, key=lambda x: x.label))
         def _cv2_add_title(img, title, filled=True, font=cv2.FONT_HERSHEY_COMPLEX, font_scale=0.7, thickness=2):
             img = img.copy()
             text_pos_x, text_pos_y = box[0] - 1, box[1] - 4

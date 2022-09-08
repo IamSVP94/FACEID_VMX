@@ -213,10 +213,16 @@ def brightness_changer(img, etalon=None, diff=None, mode='lab', show=False):  # 
     return final_img
 
 
-def get_brightness(img):
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    h, s, v = cv2.split(hsv)
-    return int(np.mean(v))
+def get_brightness(img, mode='lab'):
+    assert mode in ['hsv', 'lab']
+    if mode == 'hsv':
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(hsv)
+        return int(np.mean(v))
+    elif mode == 'lab':
+        lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+        l, u, v = cv2.split(lab)
+        return int(np.mean(l))
 
 
 def plt_show_img(img, swapRB: bool = False, title: str = None) -> None:
