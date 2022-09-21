@@ -14,7 +14,7 @@ all_persons = persons_list_from_csv(PARENT_DIR / 'src/n=10413_native.csv')
 show = False  # for easy debugging
 if __name__ == '__main__':
     DATASET_DIRS = [
-        '/home/vid/Downloads/datasets/office_turns',
+        '/home/vid/hdd/datasets/office_turns',
     ]
     imgs = []
     for dir in DATASET_DIRS:
@@ -30,15 +30,16 @@ if __name__ == '__main__':
         img = cv2.imread(str(img_path))
         faces = detector.get(img,
                              # use_roi=(45, 0, 20, 20),  # top, bottom, left, right
-                             # min_face_size=(45, 45),
+                             min_face_size=(100, 100),
                              )
         if faces:  # if not empty
-            for face in faces:
+            for face in tqdm(faces):
                 unknown = Person(full_img=img, face=face, change_brightness=False, show=show)
+                print('*' * 50)
                 near_dist = unknown.get_label(all_persons,
                                               threshold=recog_tresh,
-                                              turn_bias=3, limits=(100, 75),
-                                              use_nn=True,
+                                              turn_bias=3, limits=(100, 100),
+                                              use_nn=False,
                                               show=show,
                                               )
                 # face.brightness = unknown.brightness
@@ -52,7 +53,7 @@ if __name__ == '__main__':
                 face.etalon_path = unknown.etalon_path
                 face.etalon_crop = unknown.etalon_crop
 
-            dimg = detector.draw_on(img, faces, plot_roi=True, plot_crop_face=False, plot_etalon=False, show=show)
+            dimg = detector.draw_on(img, faces, plot_roi=True, plot_crop_face=True, plot_etalon=True, show=show)
             new_suffix = f'{[(face.label, face.rec_score) for face in faces]}.jpg'
         else:
             dimg = img

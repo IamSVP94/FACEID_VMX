@@ -9,6 +9,7 @@ import matplotlib as mpl
 from src.constants import PARENT_DIR, bright_etalon, LANDMARKS_COLORS, det_nms, det_thresh
 from src.detector import Detector_cv2, Detector_ort
 from src.face_align import estimate_norm
+from src.pose_estimator import Poser_ort, Poser_cv2
 from src.recognator import Recognator_cv2, Recognator_ort
 
 from src.selector import Selector_ort, Selector_cv2
@@ -18,11 +19,12 @@ mpl.rcParams['figure.subplot.left'] = 0.01
 mpl.rcParams['figure.subplot.right'] = 1
 
 nn_device = 'cuda'
-detector = Detector_ort(PARENT_DIR / 'models/detection/det_1280_1280.onnx', det_thresh=det_thresh, nms_thresh=det_nms,
+detector = Detector_cv2(PARENT_DIR / 'models/detection/det_1280_1280.onnx', det_thresh=det_thresh, nms_thresh=det_nms,
                         device=nn_device)
-recognator = Recognator_ort(PARENT_DIR / 'models/recognition/IResNet100l.onnx', device=nn_device)
-selector = Selector_ort(PARENT_DIR / 'models/selection/ConvNext_selector_softmaxv2_R2_15082022_112x112.onnx',
+recognator = Recognator_cv2(PARENT_DIR / 'models/recognition/IResNet100l.onnx', device=nn_device)
+selector = Selector_cv2(PARENT_DIR / 'models/selection/ConvNext_selector_softmaxv2_R2_15082022_112x112.onnx',
                         device=nn_device)
+poser = Poser_cv2(PARENT_DIR / 'models/pose/1k3d68.onnx', device=nn_device)
 
 
 class Person:
@@ -57,6 +59,7 @@ class Person:
                 self.crop_face = crop_face
         self.embedding = embedding if embedding is not None else recognator.get(self.crop_face, show=show)
         self.face = face
+        self.face.pose = poser.get(self.full_img, self.face, show=True) if self.face else []
 
     def _get_turn(self, bias=0, limits=None, show=False):
         countur = np.array([self.face.kps[1], self.face.kps[4], self.face.kps[3], self.face.kps[0]]).astype(np.float32)

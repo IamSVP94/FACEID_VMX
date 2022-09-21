@@ -251,6 +251,7 @@ class Detector:
 
     def draw_on(self, img, faces, plot_roi=False, plot_crop_face=False, plot_etalon=False, show=False):
         faces = list(sorted(faces, key=lambda x: x.label))
+
         def _cv2_add_title(img, title, filled=True, font=cv2.FONT_HERSHEY_COMPLEX, font_scale=0.7, thickness=2):
             img = img.copy()
             text_pos_x, text_pos_y = box[0] - 1, box[1] - 4
@@ -342,8 +343,8 @@ class Detector_cv2(Detector):
     def __init__(self, *args, **kwargs):
         super(Detector_cv2, self).__init__(*args, **kwargs)
         net = cv2.dnn.readNetFromONNX(str(self.path))
-        output_names = [net.getLayerNames()[i - 1] for i in net.getUnconnectedOutLayers()]  # wrong sorting
-        self.output_names = [layer for layer in net.getLayerNames() if layer in output_names]
+        self.output_names = [layer for layer in net.getLayerNames() if
+                             layer in net.getUnconnectedOutLayersNames()]  # because wrong sorting
         if self.device == 'cuda' and cv2.cuda.getCudaEnabledDeviceCount():
             net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
             net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)  # fp16 here
