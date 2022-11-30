@@ -34,14 +34,14 @@ if __name__ == '__main__':
                              )
         if faces:  # if not empty
             for face in tqdm(faces):
-                unknown = Person(full_img=img, face=face, change_brightness=False, show=show)
-                print('*' * 50)
+                unknown = Person(full_img=img, face=face, change_brightness=False, show=True)
                 near_dist = unknown.get_label(all_persons,
                                               threshold=recog_tresh,
                                               turn_bias=3, limits=(100, 100),
                                               use_nn=False,
-                                              show=show,
+                                              show=True,
                                               )
+                exit()
                 # face.brightness = unknown.brightness
                 face.turn = round(unknown.turn, 1)
                 face.crop_face = unknown.crop_face

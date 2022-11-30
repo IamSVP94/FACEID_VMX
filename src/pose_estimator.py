@@ -70,7 +70,9 @@ class Poser:
         pose = np.array([rx, ry, rz], dtype=np.float32)
         if show:
             from src.utils import plt_show_img
-            plt_show_img(img, swapRB=True, title=f'Pitch Yaw Roll: {str(pose)}')
+            show_img = img.copy()
+            cv2.rectangle(show_img, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 255), 1)
+            plt_show_img(show_img, swapRB=True, title=f'Pitch Yaw Roll: {str(pose)}')
         return pose
 
 

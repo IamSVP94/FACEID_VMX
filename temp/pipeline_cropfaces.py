@@ -54,3 +54,8 @@ if __name__ == '__main__':
             new_path.parent.mkdir(parents=True, exist_ok=True)
 
             cv2.imwrite(str(new_path), together)
+
+
+def get_frames(source):
+    Path(source).is_dir()
+    pass

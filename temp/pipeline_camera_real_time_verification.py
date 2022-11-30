@@ -9,10 +9,10 @@ from src.constants import PARENT_DIR, det_thresh, recog_tresh
 from src.utils import persons_list_from_csv, detector, Person, get_random_color
 
 currentday = datetime.date.today()
-new_output_dir_path = f'/home/vid/Downloads/datasets/SCUD/{currentday}'
+new_output_dir_path = f'/home/vid/hdd/datasets/SCUD/{currentday}'
 
-Path(new_output_dir_path, 'ready').mkdir(exist_ok=True, parents=True)
 Path(new_output_dir_path, 'raw').mkdir(exist_ok=True, parents=True)
+Path(new_output_dir_path, 'ready').mkdir(exist_ok=True, parents=True)
 Path(new_output_dir_path, '_etalons').mkdir(exist_ok=True, parents=True)
 print(f'save to {new_output_dir_path}')
 
@@ -65,9 +65,9 @@ if __name__ == '__main__':
         while (True):
             pbar.set_description(str(datetime.datetime.now()))
             ret, img = cap.read()
-            # frame_n = every_frame_count % int(max(cam_fps / new_fps, 1))
-            # if frame_n == 0:
-            if 1 == 1:  # fake
+            frame_n = every_frame_count % int(max(cam_fps / new_fps, 1))
+            if frame_n == 0:  # real
+            # if 1 == 1:  # fake
                 try:
                     faces = detector.get(
                         img,
@@ -82,7 +82,7 @@ if __name__ == '__main__':
                 monitor_logs = {'messages': [], 'colors': []}
                 if faces:  # if not empty
                     for face in faces:
-                        unknown = Person(full_img=img, face=face, change_brightness=False, show=show)
+                        unknown = Person(full_img=img, face=face, change_brightness=True, show=show)
                         near_dist = unknown.get_label(all_persons,
                                                       threshold=recog_tresh,
                                                       turn_bias=3, limits=(100, 75),

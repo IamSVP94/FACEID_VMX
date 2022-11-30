@@ -5,6 +5,6 @@ LANDMARKS_COLORS = [(0, 255, 0), (255, 0, 255), (255, 255, 255), (0, 255, 0), (2
 
 det_thresh = 0.6  # 0.75
 det_nms = 0.4  # 0.4
+recog_tresh = 0.85  # 0.65  # 0.71
 det_window_size = (1280, 1280)
-recog_tresh = 0.6
-bright_etalon = 100  # constant 150
+bright_etalon = 130  # constant 150
