@@ -74,5 +74,5 @@ class GenderAge_cv2(GenderAge):
 
     def _run(self, blob, input_size=None):
         self.net.setInput(blob)
-        results = self.net.forward(self.output_names)[0]
-        return results
+        results = self.net.forward(self.output_names)
+        return results[0][0]
